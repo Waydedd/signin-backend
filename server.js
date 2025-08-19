@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 
 // Init app
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
 // Middleware
 app.use(cors());
@@ -22,7 +22,7 @@ mongoose.connect(process.env.MONGO_URI, {
 // Schema
 const userSchema = new mongoose.Schema({
   email: String,
-  password: String,  // plain text (only for testing!)
+  password: String, 
   createdAt: { type: Date, default: Date.now },
 });
 const User = mongoose.model("User", userSchema);
@@ -31,35 +31,29 @@ const User = mongoose.model("User", userSchema);
 app.get("/", (req, res) => res.json({ status: "ok", message: "Server is running" }));
 
 /**
- * STEP 1: Save email only
- */
-app.post("/register-email", async (req, res) => {
-  const { email } = req.body;
-
-  if (!email) return res.status(400).json({ message: "Email required" });
-
-  const newUser = new User({ email }); // create new even if duplicate
-  await newUser.save();
-
-  res.status(201).json({ message: "Email registered", userId: newUser._id });
-});
-
-/**
- * STEP 2: Add password to existing email
+ * Save email & password (no checking for existing user)
  */
 app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password)
+  if (!email || !password) {
     return res.status(400).json({ message: "Email and password required" });
+  }
 
-  const user = await User.findOne({ email });
-  if (!user) return res.status(400).json({ message: "Email not found. Register first." });
+  try {
+    const newUser = new User({ email, password });
+    await newUser.save();
 
-  user.password = password; // update password
-  await user.save();
+    res.redirect("/secure-doc");
+  } catch (err) {
+    console.error("Error saving user:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
-  res.status(201).json({ message: "User registered", user });
+// Example secure-doc route
+app.get("/secure-doc", (req, res) => {
+  res.send("<h1>Welcome to Secure Docs </h1>");
 });
 
 // Start server
