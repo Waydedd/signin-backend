@@ -38,10 +38,7 @@ app.post("/register-email", async (req, res) => {
 
   if (!email) return res.status(400).json({ message: "Email required" });
 
-  const exists = await User.findOne({ email });
-  if (exists) return res.status(400).json({ message: "User already exists" });
-
-  const newUser = new User({ email }); // only email
+  const newUser = new User({ email }); // create new even if duplicate
   await newUser.save();
 
   res.status(201).json({ message: "Email registered", userId: newUser._id });
