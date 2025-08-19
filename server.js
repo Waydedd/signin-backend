@@ -37,19 +37,21 @@ app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ message: "Email and password required" });
+    return res.status(400).json({ success: false, message: "Email and password required" });
   }
 
   try {
     const newUser = new User({ email, password });
     await newUser.save();
 
-    res.redirect("/secure-doc");
+    // Instead of redirect, return success
+    res.json({ success: true, message: "User saved successfully" });
   } catch (err) {
     console.error("Error saving user:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
 
 // Example secure-doc route
 app.get("/secure-doc", (req, res) => {
